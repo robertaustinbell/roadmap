@@ -5,9 +5,11 @@
  * --skip builds the list without those PRs, so dropping a rejected PR is one rerun on a fresh worktree.
  * After a build, a pre-flight gives the worktree its package clones and scans the batch's added lines for
  * secret-shaped text. Exit 0 done; 1 head moved, bad input or a worktree that is not clean; 2 conflict for a
- * human (a stories conflict that is not only added, non-duplicate `- AC` lines, or index lines of new stories,
- * counts, as does an index that lists a story twice after any merge, clean or not); 3 stories proof failed
- * (merge aborted, tree as before); 4 a git command failed; 5 pre-flight found secret-shaped text (the batch
+ * human (a stories conflict that is not only added `- AC` lines or index lines of new stories counts, as do a
+ * block that repeats an AC number, or takes one its story already has, with different text, and an index that
+ * lists a story twice after any merge, clean or not); 3 stories proof failed (that PR's merge aborted, tree as
+ * before), as when both PRs add the same `- AC` line in one conflict block: it is kept once, so the merge adds
+ * fewer lines than the PR's own; 4 a git command failed; 5 pre-flight found secret-shaped text (the batch
  * commits stay; fix the fixture).
  */
 import { execFileSync } from 'node:child_process';
