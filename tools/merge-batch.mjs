@@ -5,12 +5,15 @@
  * --skip builds the list without those PRs, so dropping a rejected PR is one rerun on a fresh worktree.
  * After a build, a pre-flight gives the worktree its package clones and scans the batch's added lines for
  * secret-shaped text. Exit 0 done; 1 head moved, bad input or a worktree that is not clean; 2 conflict for a
- * human (a stories conflict that is not only added `- AC` lines or index lines of new stories counts, as do a
- * block that repeats an AC number, or takes one its story already has, with different text, and an index that
- * lists a story twice after any merge, clean or not); 3 stories proof failed (that PR's merge aborted, tree as
- * before), as when both PRs add the same `- AC` line in one conflict block: it is kept once, so the merge adds
- * fewer lines than the PR's own; 4 a git command failed; 5 pre-flight found secret-shaped text (the batch
- * commits stay; fix the fixture).
+ * human; 3 stories proof failed (that PR's merge aborted, tree as before); 4 a git command failed; 5 pre-flight
+ * found secret-shaped text (the batch commits stay; fix the fixture).
+ * A merge is checked in this order. Exit 2 first: the merge failed with no conflicted file, a conflicted file is
+ * not stories text, or a stories block is not only added `- AC` lines or index lines of new stories. Then each
+ * `- AC` block keeps each line once, in AC order, and stops with exit 2 when it repeats an AC number with
+ * different text or takes one its story already has outside the block (whatever its text). Only then the proof:
+ * exit 3 when a stories file's change is not exactly the PR's own lines, as when both PRs add the same `- AC`
+ * line in one conflict block (kept once, so the merge adds fewer lines). Last, after any merge, clean or not:
+ * exit 2 when the index lists a story twice.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, realpathSync, writeFileSync, writeSync } from 'node:fs';

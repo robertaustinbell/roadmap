@@ -278,9 +278,10 @@ and Brad merges them. One at a time, each merge made the rest conflict and re-ru
    (exit 1); then it merges the reviewed head as is (GitHub then marks the PR merged when the batch lands), and
    merges add-only `docs/user-stories.md` conflicts (both sides' `- AC`
    lines, in order). The tool proves that merge changed the stories file by exactly the PR's own lines
-   (exit 3 and the merge undone if not), so those conflicts need no reviewer re-check. A repeated AC number with different text, or any other conflict, stops it (exit 2): fix
-   it by hand and get one scoped re-check by a fresh adversary, since the fix is new lines. The same `- AC` line
-   added by both PRs in one block is kept once, so the proof stops it (exit 3).
+   (exit 3 and the merge undone if not), so those conflicts need no reviewer re-check. An AC number repeated in a block with different text, one the story already has outside the block, or any other conflict
+   stops it (exit 2): fix it by hand and get one scoped re-check by a fresh adversary, since the fix is new lines.
+   These checks run before the proof. When none of them stops it, the same `- AC` line added by both PRs in one
+   block is kept once, so the proof stops it (exit 3).
    After a clean build, a pre-flight runs before any reviewer starts. It gives the worktree its package
    clones by running the main checkout's worktree hook (never the batch tree's copy, which is contributor
    code until it lands), so reviewers spawned from the main checkout can run tests there. If a package
