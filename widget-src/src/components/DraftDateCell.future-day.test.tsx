@@ -9,6 +9,7 @@ import { StartingInfoVitals, type VitalsPrefillFn } from './StartingInfoVitals';
 import { DraftDateCell } from './DraftDateCell';
 import { pressMouse, releaseMouse, typeInto } from '../testing/matrix-gestures';
 import { BT_TIMELINE_DRAFT_KEY, noteDevicePage } from '../lib/storage';
+import type { ApiMeasurement } from '@roadmap/health-core/mappings';
 
 // This page's record is open, on this device: the drafts it keeps are its own (US-11 AC6).
 noteDevicePage();
@@ -34,10 +35,10 @@ function typeKeys(input: HTMLInputElement, values: string[]) {
 const draftCell = (root: HTMLElement, label: string) => [...root.querySelectorAll('.bt-row')].find((r) => r.querySelector('.bt-name-label')?.textContent === label)!.querySelector('.bt-cell-draft input') as HTMLInputElement;
 const shown = (root: HTMLElement) => [...root.querySelectorAll('.bt-cell-draft')].filter((c) => c.textContent?.includes(NOT_YET)).length;
 
-function bloodGrid() {
+function bloodGrid(history: ApiMeasurement[] = []) {
   const onSaveBatch: Mock = vi.fn().mockResolvedValue(new Map());
   const prefillRef: MutableRefObject<BloodTestPrefillFn | null> = { current: null };
-  const view = render(<BloodTestTimeline bloodTestHistory={[]} unitSystem="si" unitOverrides={{}} onToggleFieldUnit={() => ({ from: 'si', to: 'conventional' })}
+  const view = render(<BloodTestTimeline bloodTestHistory={history} unitSystem="si" unitOverrides={{}} onToggleFieldUnit={() => ({ from: 'si', to: 'conventional' })}
     onSaveBatch={onSaveBatch} onCorrectValue={vi.fn()} isSaving={false} grading={{}} hasApiResponse prefillRef={prefillRef}/>);
   return { view, onSaveBatch, prefillRef, date: view.getByLabelText('Choose draft batch date') as HTMLInputElement };
 }
@@ -64,6 +65,19 @@ describe('US-03 AC1a: nothing in the New column is saved under a day that has no
     pick(date, TOMORROW);
     expect(shown(view.container)).toBe(1); // the day's words, not the older refusal
     expect(date.max).toBe(TODAY);
+  });
+
+  it('blood tests: under tomorrow, a saved column\'s cell for the same test does not say so, empty or typed; the New column\'s does', () => {
+    // A saved column on a past day holding HDL only, so its LDL cell is empty and shown for typing.
+    const hdl: ApiMeasurement = { id: 'h1', metricType: 'hdl', value: 1.4, recordedAt: `${PAST}T00:00:00.000Z`, createdAt: `${PAST}T00:00:00.000Z`, status: 'active' };
+    const { view, date } = bloodGrid([hdl]);
+    const ldlRow = [...view.container.querySelectorAll('.bt-row')].find((r) => r.querySelector('.bt-name-label')?.textContent === 'LDL Cholesterol')!;
+    const savedCell = ldlRow.querySelector('.bt-cell-backfill') as HTMLElement;
+    typeInto(draftCell(view.container, 'LDL Cholesterol'), '3.2');
+    pick(date, TOMORROW);
+    expect([shown(view.container), savedCell.textContent?.includes(NOT_YET)]).toEqual([1, false]);
+    typeInto(savedCell.querySelector('input') as HTMLInputElement, '3.0');
+    expect([shown(view.container), savedCell.textContent?.includes(NOT_YET)]).toEqual([1, false]);
   });
 
   it('blood tests, keyboard, then the tick with the focus still in the date (B2): saved under the past day typed; tomorrow typed, no tick', async () => {

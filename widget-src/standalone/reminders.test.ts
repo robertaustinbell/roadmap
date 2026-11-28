@@ -1085,6 +1085,7 @@ describe('US-11 AC4c, AC15 — the EraseCancel transition and what the commit se
     ['a cancelled row observed is not cancelled again', set(on('test-token-a'), on('test-token-c', 'cancelled')), [undefined], ['test-token-a']],
     ['not a token the standing record holds active', set(on('test-token-a'), on('test-token-b')), [on('test-token-b')], ['test-token-a']],
     ['not a token active only in a nested standing row', set(on('test-token-a'), on('test-token-b')), [{ ...on('', 'cancelled'), tokens: [on('test-token-b')] }], ['test-token-a']],
+    ['a token a standing row holds cancelled is still cancelled', set(on('test-token-a'), on('test-token-b')), [on('test-token-b', 'cancelled')], ['test-token-a', 'test-token-b']],
     ['not a token active in the copy that took the write', set(on('test-token-a'), on('test-token-b')), [on('test-token-a'), undefined], ['test-token-b']],
     ['a standing token never observed changes nothing', on('test-token-a'), [on('test-token-c')], ['test-token-a']],
     ['nothing observed, nothing sent', undefined, [undefined], []],
